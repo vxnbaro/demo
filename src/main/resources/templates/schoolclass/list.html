@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Lớp học | EduGrade</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+    <th:block th:replace="~{fragments/styles :: styles}"></th:block>
+</head>
+<body>
+<div th:replace="~{fragments/sidebar :: sidebar('classes')}"></div>
+
+<div id="main">
+    <div class="topbar">
+        <div class="topbar-title"><i class="bi bi-building me-2"></i>Quản lý Lớp học</div>
+        <span class="text-muted" style="font-size:.8rem"
+              th:text="${#temporals.format(#temporals.createNow(),'dd/MM/yyyy')}"></span>
+    </div>
+    <div class="content">
+        <div th:if="${successMsg}" class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle me-2"></i><span th:text="${successMsg}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${errorMsg}" class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorMsg}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <div class="d-flex justify-content-end mb-3">
+            <a th:href="@{/classes/new}" class="btn btn-primary"
+               sec:authorize="hasRole('ADMIN')">
+                <i class="bi bi-plus-lg me-1"></i>Thêm lớp học
+            </a>
+        </div>
+
+        <div class="row g-3">
+            <div th:each="cls : ${classes}" class="col-md-6 col-xl-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start justify-content-between mb-2">
+                            <div class="p-2 rounded-3" style="background:#dbeafe">
+                                <i class="bi bi-building fs-5" style="color:#1d4ed8"></i>
+                            </div>
+                            <div class="d-flex gap-1" sec:authorize="hasRole('ADMIN')">
+                                <a th:href="@{/classes/{id}/edit(id=${cls.id})}"
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form th:action="@{/classes/{id}/delete(id=${cls.id})}"
+                                      method="post"
+                                      onsubmit="return confirm('Xóa lớp này?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        <h6 class="fw-700 mt-2 mb-1">
+                            <a th:href="@{/classes/{id}(id=${cls.id})}"
+                               class="text-decoration-none text-dark"
+                               th:text="${cls.className}">Lớp</a>
+                        </h6>
+                        <div class="text-muted" style="font-size:.82rem" th:text="${cls.department ?: '-'}">Khoa</div>
+                        <div class="text-muted" style="font-size:.82rem" th:text="${cls.major ?: '-'}">Ngành</div>
+                        <hr class="my-2"/>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-muted" style="font-size:.8rem">Khóa: <span th:text="${cls.academicYear ?: '-'}">-</span></span>
+                            <span class="badge bg-primary">
+                                <i class="bi bi-people me-1"></i>
+                                <span th:text="${cls.studentCount}">0</span> SV
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div th:if="${#lists.isEmpty(classes)}" class="col-12">
+                <div class="card">
+                    <div class="card-body text-center text-muted py-5">
+                        <i class="bi bi-building fs-1 d-block mb-2" style="color:#cbd5e1"></i>
+                        Chưa có lớp học nào
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

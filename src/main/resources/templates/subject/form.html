@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${isEdit} ? 'Sửa Môn học' : 'Thêm Môn học'">Môn học | EduGrade</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+    <th:block th:replace="~{fragments/styles :: styles}"></th:block>
+</head>
+<body>
+<div th:replace="~{fragments/sidebar :: sidebar('subjects')}"></div>
+
+<div id="main">
+    <div class="topbar">
+        <div class="d-flex align-items-center gap-2">
+            <a th:href="@{/subjects}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div class="topbar-title"
+                 th:text="${isEdit} ? 'Chỉnh sửa Môn học' : 'Thêm Môn học mới'">Form</div>
+        </div>
+    </div>
+    <div class="content">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card form-card">
+                    <div class="card-header">
+                        <i class="bi bi-book me-2"></i>
+                        <span th:text="${isEdit} ? 'Cập nhật môn học' : 'Nhập thông tin môn học'">Form</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="${isEdit} ? @{/subjects/{id}/edit(id=${subjectId})} : @{/subjects/new}"
+                              th:object="${subjectRequest}" method="post">
+                            <div class="mb-3">
+                                <label class="form-label">Mã môn học <span class="text-danger">*</span></label>
+                                <input type="text" th:field="*{subjectCode}"
+                                       class="form-control" th:classappend="${#fields.hasErrors('subjectCode')} ? 'is-invalid'"
+                                       placeholder="VD: MATH101" th:readonly="${isEdit}"/>
+                                <div class="invalid-feedback" th:errors="*{subjectCode}"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Tên môn học <span class="text-danger">*</span></label>
+                                <input type="text" th:field="*{subjectName}"
+                                       class="form-control" th:classappend="${#fields.hasErrors('subjectName')} ? 'is-invalid'"
+                                       placeholder="VD: Toán cao cấp"/>
+                                <div class="invalid-feedback" th:errors="*{subjectName}"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Số tín chỉ <span class="text-danger">*</span></label>
+                                <input type="number" th:field="*{credits}"
+                                       class="form-control" th:classappend="${#fields.hasErrors('credits')} ? 'is-invalid'"
+                                       min="1" max="10" placeholder="VD: 3"/>
+                                <div class="invalid-feedback" th:errors="*{credits}"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Mô tả</label>
+                                <textarea th:field="*{description}" class="form-control" rows="3"
+                                          placeholder="Mô tả ngắn về môn học..."></textarea>
+                            </div>
+                            <hr/>
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a th:href="@{/subjects}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-lg me-1"></i>Hủy
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg me-1"></i>
+                                    <span th:text="${isEdit} ? 'Cập nhật' : 'Thêm mới'">Lưu</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

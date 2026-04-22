@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${isEdit} ? 'Sửa Lớp học' : 'Thêm Lớp học'">Lớp học | EduGrade</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+    <th:block th:replace="~{fragments/styles :: styles}"></th:block>
+</head>
+<body>
+<div th:replace="~{fragments/sidebar :: sidebar('classes')}"></div>
+
+<div id="main">
+    <div class="topbar">
+        <div class="d-flex align-items-center gap-2">
+            <a th:href="@{/classes}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div class="topbar-title"
+                 th:text="${isEdit} ? 'Chỉnh sửa Lớp học' : 'Thêm Lớp học mới'">Form</div>
+        </div>
+    </div>
+    <div class="content">
+        <div class="row justify-content-center">
+            <div class="col-lg-6">
+                <div class="card form-card">
+                    <div class="card-header">
+                        <i class="bi bi-building me-2"></i>
+                        <span th:text="${isEdit} ? 'Cập nhật lớp học' : 'Nhập thông tin lớp học'">Form</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="${isEdit} ? @{/classes/{id}/edit(id=${classId})} : @{/classes/new}"
+                              th:object="${classRequest}" method="post">
+                            <div class="mb-3">
+                                <label class="form-label">Tên lớp <span class="text-danger">*</span></label>
+                                <input type="text" th:field="*{className}"
+                                       class="form-control" th:classappend="${#fields.hasErrors('className')} ? 'is-invalid'"
+                                       placeholder="VD: CNTT-K21A"/>
+                                <div class="invalid-feedback" th:errors="*{className}"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Khoa</label>
+                                <input type="text" th:field="*{department}" class="form-control"
+                                       placeholder="VD: Khoa Công nghệ thông tin"/>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Chuyên ngành</label>
+                                <input type="text" th:field="*{major}" class="form-control"
+                                       placeholder="VD: Công nghệ phần mềm"/>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Khóa học</label>
+                                <input type="text" th:field="*{academicYear}" class="form-control"
+                                       placeholder="VD: 2021-2025"/>
+                            </div>
+                            <hr/>
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a th:href="@{/classes}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-lg me-1"></i>Hủy
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg me-1"></i>
+                                    <span th:text="${isEdit} ? 'Cập nhật' : 'Thêm mới'">Lưu</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

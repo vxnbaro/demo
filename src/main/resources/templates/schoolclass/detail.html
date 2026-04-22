@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Chi tiết Lớp | EduGrade</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+    <th:block th:replace="~{fragments/styles :: styles}"></th:block>
+</head>
+<body>
+<div th:replace="~{fragments/sidebar :: sidebar('classes')}"></div>
+
+<div id="main">
+    <div class="topbar">
+        <div class="d-flex align-items-center gap-2">
+            <a th:href="@{/classes}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div class="topbar-title" th:text="'Lớp ' + ${schoolClass.className}">Chi tiết lớp</div>
+        </div>
+    </div>
+    <div class="content">
+        <div class="row g-3">
+            <!-- Info card -->
+            <div class="col-lg-3">
+                <div class="card">
+                    <div class="card-body text-center pt-4">
+                        <div class="mx-auto mb-3" style="width:64px;height:64px;border-radius:16px;
+                             background:#dbeafe;display:flex;align-items:center;justify-content:center">
+                            <i class="bi bi-building fs-3" style="color:#1d4ed8"></i>
+                        </div>
+                        <h5 class="fw-700" th:text="${schoolClass.className}">Lớp</h5>
+                        <span class="badge bg-primary mb-3"
+                              th:text="${schoolClass.studentCount} + ' sinh viên'">0 SV</span>
+                        <div class="text-start mt-3">
+                            <div class="py-2 border-bottom">
+                                <small class="text-muted d-block">Khoa</small>
+                                <span class="fw-600" th:text="${schoolClass.department ?: '-'}">-</span>
+                            </div>
+                            <div class="py-2 border-bottom">
+                                <small class="text-muted d-block">Chuyên ngành</small>
+                                <span class="fw-600" th:text="${schoolClass.major ?: '-'}">-</span>
+                            </div>
+                            <div class="py-2">
+                                <small class="text-muted d-block">Khóa học</small>
+                                <span class="fw-600" th:text="${schoolClass.academicYear ?: '-'}">-</span>
+                            </div>
+                        </div>
+                        <a th:href="@{/classes/{id}/edit(id=${schoolClass.id})}"
+                           class="btn btn-primary btn-sm w-100 mt-3"
+                           sec:authorize="hasRole('ADMIN')">
+                            <i class="bi bi-pencil me-1"></i>Chỉnh sửa
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Student list -->
+            <div class="col-lg-9">
+                <div class="card table-card">
+                    <div class="card-header">
+                        <i class="bi bi-people me-2"></i>
+                        Danh sách sinh viên lớp <span th:text="${schoolClass.className}"></span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                            <tr>
+                                <th class="px-3">#</th>
+                                <th>Mã SV</th>
+                                <th>Họ và tên</th>
+                                <th>Email</th>
+                                <th>SĐT</th>
+                                <th class="text-center">GPA</th>
+                                <th class="text-center">Xếp loại</th>
+                                <th class="text-center">Chi tiết</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="sv, iter : ${students}">
+                                <td class="px-3 text-muted" th:text="${iter.index + 1}">1</td>
+                                <td>
+                                    <span class="badge bg-light text-dark border fw-600"
+                                          th:text="${sv.studentCode}">SV001</span>
+                                </td>
+                                <td class="fw-600" th:text="${sv.fullName}">Tên</td>
+                                <td class="text-muted" style="font-size:.85rem" th:text="${sv.email}">-</td>
+                                <td class="text-muted" style="font-size:.85rem"
+                                    th:text="${sv.phoneNumber ?: '-'}">-</td>
+                                <td class="text-center fw-700"
+                                    th:text="${#numbers.formatDecimal(sv.gpa,1,1)}">0.0</td>
+                                <td class="text-center">
+                                    <span th:text="${sv.academicRank}"
+                                          th:classappend="${sv.gpa >= 8.0} ? 'badge bg-success' :
+                                                          (${sv.gpa >= 6.5} ? 'badge bg-primary' :
+                                                          (${sv.gpa >= 5.0} ? 'badge bg-warning text-dark' :
+                                                          'badge bg-danger'))">Loại</span>
+                                </td>
+                                <td class="text-center">
+                                    <a th:href="@{/students/{id}(id=${sv.id})}"
+                                       class="btn btn-sm btn-outline-info">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(students)}">
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    <i class="bi bi-people fs-2 d-block mb-2"></i>
+                                    Lớp chưa có sinh viên nào
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

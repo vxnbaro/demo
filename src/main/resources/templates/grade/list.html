@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Bảng điểm | EduGrade</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+    <th:block th:replace="~{fragments/styles :: styles}"></th:block>
+</head>
+<body>
+<div th:replace="~{fragments/sidebar :: sidebar('grades')}"></div>
+
+<div id="main">
+    <div class="topbar">
+        <div class="topbar-title"><i class="bi bi-journal-check me-2"></i>Bảng điểm</div>
+        <span class="text-muted" style="font-size:.8rem"
+              th:text="${#temporals.format(#temporals.createNow(),'dd/MM/yyyy')}"></span>
+    </div>
+
+    <div class="content">
+        <div th:if="${successMsg}" class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle me-2"></i><span th:text="${successMsg}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${errorMsg}" class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorMsg}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <form th:action="@{/grades}" method="get" class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label fw-600">Môn học</label>
+                        <select name="subjectId" class="form-select">
+                            <option value="">-- Tất cả môn --</option>
+                            <option th:each="sub : ${subjects}"
+                                    th:value="${sub.id}"
+                                    th:text="${sub.subjectName}"
+                                    th:selected="${sub.id == selectedSubjectId}">Môn</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-600">Học kỳ</label>
+                        <select name="semester" class="form-select">
+                            <option value="">-- Tất cả --</option>
+                            <option th:each="sem : ${semesters}"
+                                    th:value="${sem}"
+                                    th:text="${sem}"
+                                    th:selected="${sem == selectedSemester}">HK</option>
+                        </select>
+                    </div>
+                    <div class="col-md-auto">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-funnel me-1"></i>Lọc
+                        </button>
+                        <a th:href="@{/grades}" class="btn btn-outline-secondary ms-1">
+                            <i class="bi bi-x"></i> Reset
+                        </a>
+                    </div>
+                    <div class="col-md-auto ms-auto">
+                        <a th:href="@{/grades/new}" class="btn btn-success">
+                            <i class="bi bi-plus-lg me-1"></i>Nhập điểm
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Thống kê nhanh nếu đã lọc -->
+        <div th:if="${grades != null and !#lists.isEmpty(grades)}" class="row g-2 mb-3">
+            <div class="col-auto">
+                <div class="card px-3 py-2 d-flex flex-row align-items-center gap-2">
+                    <i class="bi bi-people text-primary"></i>
+                    <span class="fw-600" th:text="${#lists.size(grades)}">0</span>
+                    <span class="text-muted" style="font-size:.8rem">sinh viên</span>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="card px-3 py-2 d-flex flex-row align-items-center gap-2">
+                    <i class="bi bi-bar-chart text-success"></i>
+                    <span class="fw-600" th:text="${#numbers.formatDecimal(avgScore,1,2)}">0.0</span>
+                    <span class="text-muted" style="font-size:.8rem">điểm TB</span>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="card px-3 py-2 d-flex flex-row align-items-center gap-2">
+                    <i class="bi bi-check-circle text-success"></i>
+                    <span class="fw-600 text-success"
+                          th:text="${#lists.size(grades.?[score >= 5.0])}">0</span>
+                    <span class="text-muted" style="font-size:.8rem">đạt</span>
+                </div>
+            </div>
+            <div class="col-auto">
+                <div class="card px-3 py-2 d-flex flex-row align-items-center gap-2">
+                    <i class="bi bi-x-circle text-danger"></i>
+                    <span class="fw-600 text-danger"
+                          th:text="${#lists.size(grades.?[score < 5.0])}">0</span>
+                    <span class="text-muted" style="font-size:.8rem">rớt</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grade table -->
+        <div class="card table-card" th:if="${grades != null}">
+            <div class="card-header">
+                <i class="bi bi-table me-2"></i>
+                Kết quả
+                <th:block th:if="${selectedSubjectId != null}">
+                    — <span th:each="sub : ${subjects}" th:if="${sub.id == selectedSubjectId}"
+                            th:text="${sub.subjectName}"></span>
+                </th:block>
+                <th:block th:if="${selectedSemester != null and !#strings.isEmpty(selectedSemester)}">
+                    — Học kỳ <span th:text="${selectedSemester}"></span>
+                </th:block>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                    <tr>
+                        <th class="px-3">#</th>
+                        <th>Sinh viên</th>
+                        <th>Mã SV</th>
+                        <th class="text-center">CC</th>
+                        <th class="text-center">GK</th>
+                        <th class="text-center">CK</th>
+                        <th class="text-center">Tổng kết</th>
+                        <th class="text-center">Chữ</th>
+                        <th class="text-center">Kết quả</th>
+                        <th class="text-center">Học kỳ</th>
+                        <th class="text-center">Thao tác</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="g, iter : ${grades}">
+                        <td class="px-3 text-muted" th:text="${iter.index + 1}">1</td>
+                        <td>
+                            <a th:href="@{/students/{id}(id=${g.student.id})}"
+                               class="fw-600 text-decoration-none"
+                               th:text="${g.student.fullName}">Tên</a>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark border"
+                                  th:text="${g.student.studentCode}">SV001</span>
+                        </td>
+                        <td class="text-center" th:text="${g.attendanceScore != null ? #numbers.formatDecimal(g.attendanceScore,1,1) : '-'}">-</td>
+                        <td class="text-center" th:text="${g.midtermScore != null ? #numbers.formatDecimal(g.midtermScore,1,1) : '-'}">-</td>
+                        <td class="text-center" th:text="${g.finalScore != null ? #numbers.formatDecimal(g.finalScore,1,1) : '-'}">-</td>
+                        <td class="text-center">
+                            <span class="fw-700"
+                                  th:text="${#numbers.formatDecimal(g.score,1,1)}"
+                                  th:style="${g.score >= 8.0} ? 'color:#15803d' :
+                                             (${g.score >= 6.5} ? 'color:#1d4ed8' :
+                                             (${g.score >= 5.0} ? 'color:#a16207' : 'color:#dc2626'))">0.0</span>
+                        </td>
+                        <td class="text-center">
+                            <span th:text="${g.letterGrade}"
+                                  th:classappend="${g.letterGrade.startsWith('A')} ? 'grade-badge grade-a' :
+                                                  (${g.letterGrade.startsWith('B')} ? 'grade-badge grade-b' :
+                                                  (${g.letterGrade.startsWith('C')} ? 'grade-badge grade-c' :
+                                                  (${g.letterGrade.startsWith('D')} ? 'grade-badge grade-d' :
+                                                  'grade-badge grade-f')))">A</span>
+                        </td>
+                        <td class="text-center">
+                            <span th:if="${g.passed}" class="badge bg-success">Đạt</span>
+                            <span th:unless="${g.passed}" class="badge bg-danger">Rớt</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark border" th:text="${g.semester}">HK</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <a th:href="@{/grades/{id}/edit(id=${g.id})}"
+                                   class="btn btn-sm btn-outline-primary" title="Sửa">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form th:action="@{/grades/{id}/delete(id=${g.id})}"
+                                      method="post"
+                                      onsubmit="return confirm('Xóa điểm này?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(grades)}">
+                        <td colspan="11" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                            Không có dữ liệu điểm
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Placeholder khi chưa lọc -->
+        <div th:unless="${grades != null}" class="card">
+            <div class="card-body text-center py-5 text-muted">
+                <i class="bi bi-funnel fs-1 d-block mb-3" style="color:#cbd5e1"></i>
+                <h6>Chọn Môn học và Học kỳ để xem bảng điểm</h6>
+                <p class="small">Hoặc <a th:href="@{/grades/new}">nhập điểm mới</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

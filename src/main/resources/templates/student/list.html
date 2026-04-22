@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Sinh viên | EduGrade</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+    <th:block th:replace="~{fragments/styles :: styles}"></th:block>
+</head>
+<body>
+<div th:replace="~{fragments/sidebar :: sidebar('students')}"></div>
+
+<div id="main">
+    <div class="topbar">
+        <div class="topbar-title"><i class="bi bi-people me-2"></i>Quản lý Sinh viên</div>
+        <span class="text-muted" style="font-size:.8rem"
+              th:text="${#temporals.format(#temporals.createNow(),'dd/MM/yyyy')}"></span>
+    </div>
+
+    <div class="content">
+        <!-- Alerts -->
+        <div th:if="${successMsg}" class="alert alert-success alert-dismissible fade show">
+            <i class="bi bi-check-circle me-2"></i><span th:text="${successMsg}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${errorMsg}" class="alert alert-danger alert-dismissible fade show">
+            <i class="bi bi-exclamation-circle me-2"></i><span th:text="${errorMsg}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="d-flex align-items-center justify-content-between mb-3 gap-2 flex-wrap">
+            <form th:action="@{/students}" method="get" class="d-flex gap-2">
+                <div class="input-group" style="width:280px">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                    <input type="text" name="keyword" class="form-control border-start-0 ps-0"
+                           placeholder="Tìm theo tên, mã SV, email..."
+                           th:value="${keyword}"/>
+                </div>
+                <button class="btn btn-primary" type="submit">Tìm</button>
+                <a th:href="@{/students}" class="btn btn-outline-secondary" th:if="${!#strings.isEmpty(keyword)}">
+                    <i class="bi bi-x"></i> Xóa lọc
+                </a>
+            </form>
+            <a th:href="@{/students/new}" class="btn btn-primary">
+                <i class="bi bi-plus-lg me-1"></i>Thêm sinh viên
+            </a>
+        </div>
+
+        <!-- Table -->
+        <div class="card table-card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>
+                    Danh sách sinh viên
+                    <span class="badge bg-primary ms-2" th:text="${studentPage.totalElements}">0</span>
+                </span>
+                <span class="text-muted" style="font-size:.8rem"
+                      th:if="${!#strings.isEmpty(keyword)}"
+                      th:text="'Kết quả tìm: ' + ${keyword}"></span>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                    <tr>
+                        <th class="px-3" style="width:40px">#</th>
+                        <th>Mã SV</th>
+                        <th>Họ và tên</th>
+                        <th>Lớp</th>
+                        <th>Email</th>
+                        <th>SĐT</th>
+                        <th class="text-center">GPA</th>
+                        <th class="text-center">Xếp loại</th>
+                        <th class="text-center" style="width:120px">Thao tác</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="sv, iter : ${studentPage.content}">
+                        <td class="px-3 text-muted"
+                            th:text="${studentPage.number * studentPage.size + iter.index + 1}">1</td>
+                        <td>
+                            <span class="badge bg-light text-dark fw-600 border"
+                                  th:text="${sv.studentCode}">SV001</span>
+                        </td>
+                        <td>
+                            <a th:href="@{/students/{id}(id=${sv.id})}"
+                               class="fw-600 text-decoration-none text-dark"
+                               th:text="${sv.fullName}">Tên</a>
+                        </td>
+                        <td>
+                            <span th:if="${sv.schoolClass != null}"
+                                  class="badge bg-info text-dark"
+                                  th:text="${sv.schoolClass.className}">Lớp</span>
+                            <span th:unless="${sv.schoolClass != null}" class="text-muted">-</span>
+                        </td>
+                        <td class="text-muted" th:text="${sv.email}">email</td>
+                        <td class="text-muted" th:text="${sv.phoneNumber ?: '-'}">-</td>
+                        <td class="text-center">
+                            <span class="fw-700" th:text="${#numbers.formatDecimal(sv.gpa, 1, 1)}">0.0</span>
+                        </td>
+                        <td class="text-center">
+                            <span th:text="${sv.academicRank}"
+                                  th:classappend="${sv.gpa >= 8.0} ? 'badge bg-success' :
+                                                  (${sv.gpa >= 6.5} ? 'badge bg-primary' :
+                                                  (${sv.gpa >= 5.0} ? 'badge bg-warning text-dark' :
+                                                  'badge bg-danger'))">Loại</span>
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <a th:href="@{/students/{id}(id=${sv.id})}"
+                                   class="btn btn-sm btn-outline-info" title="Chi tiết">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a th:href="@{/students/{id}/edit(id=${sv.id})}"
+                                   class="btn btn-sm btn-outline-primary" title="Sửa">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form th:action="@{/students/{id}/delete(id=${sv.id})}"
+                                      method="post" class="d-inline"
+                                      onsubmit="return confirm('Xóa sinh viên này?')">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr th:if="${studentPage.empty}">
+                        <td colspan="9" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                            Không tìm thấy sinh viên nào
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="card-footer bg-white d-flex align-items-center justify-content-between"
+                 th:if="${studentPage.totalPages > 1}">
+                <small class="text-muted"
+                       th:text="'Hiển thị ' + (${studentPage.number * studentPage.size + 1})
+                                + ' - ' + (${(studentPage.number + 1) * studentPage.size < studentPage.totalElements
+                                            ? (studentPage.number + 1) * studentPage.size
+                                            : studentPage.totalElements})
+                                + ' / ' + ${studentPage.totalElements} + ' sinh viên'"></small>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item" th:classappend="${studentPage.first} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/students(page=${studentPage.number - 1}, keyword=${keyword})}">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item" th:each="i : ${#numbers.sequence(0, studentPage.totalPages - 1)}"
+                            th:classappend="${i == studentPage.number} ? 'active'">
+                            <a class="page-link"
+                               th:href="@{/students(page=${i}, keyword=${keyword})}"
+                               th:text="${i + 1}">1</a>
+                        </li>
+                        <li class="page-item" th:classappend="${studentPage.last} ? 'disabled'">
+                            <a class="page-link"
+                               th:href="@{/students(page=${studentPage.number + 1}, keyword=${keyword})}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

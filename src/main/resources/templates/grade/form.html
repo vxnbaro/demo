@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${isEdit} ? 'Sửa điểm' : 'Nhập điểm'">Điểm | EduGrade</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+    <th:block th:replace="~{fragments/styles :: styles}"></th:block>
+</head>
+<body>
+<div th:replace="~{fragments/sidebar :: sidebar('grades')}"></div>
+
+<div id="main">
+    <div class="topbar">
+        <div class="d-flex align-items-center gap-2">
+            <a th:href="@{/grades}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div class="topbar-title"
+                 th:text="${isEdit} ? 'Chỉnh sửa điểm' : 'Nhập điểm mới'">Form điểm</div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="row justify-content-center">
+            <div class="col-lg-7">
+                <div class="card form-card">
+                    <div class="card-header">
+                        <i class="bi bi-journal-plus me-2"></i>
+                        <span th:text="${isEdit} ? 'Cập nhật điểm' : 'Nhập điểm cho sinh viên'">Form</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="${isEdit} ? @{/grades/{id}/edit(id=${gradeId})} : @{/grades/new}"
+                              th:object="${gradeRequest}" method="post">
+
+                            <!-- Sinh viên (disabled khi edit) -->
+                            <div class="mb-3">
+                                <label class="form-label">Sinh viên <span class="text-danger">*</span></label>
+                                <th:block th:if="${isEdit}">
+                                    <input type="hidden" th:field="*{studentId}"/>
+                                    <input type="text" class="form-control"
+                                           th:value="${grade.student.fullName + ' (' + grade.student.studentCode + ')'}"
+                                           readonly/>
+                                </th:block>
+                                <th:block th:unless="${isEdit}">
+                                    <select th:field="*{studentId}"
+                                            class="form-select" th:classappend="${#fields.hasErrors('studentId')} ? 'is-invalid'">
+                                        <option value="">-- Chọn sinh viên --</option>
+                                        <option th:each="sv : ${students}"
+                                                th:value="${sv.id}"
+                                                th:text="${sv.fullName + ' (' + sv.studentCode + ')'}">SV</option>
+                                    </select>
+                                    <div class="invalid-feedback" th:errors="*{studentId}"></div>
+                                </th:block>
+                            </div>
+
+                            <!-- Môn học (disabled khi edit) -->
+                            <div class="mb-3">
+                                <label class="form-label">Môn học <span class="text-danger">*</span></label>
+                                <th:block th:if="${isEdit}">
+                                    <input type="hidden" th:field="*{subjectId}"/>
+                                    <input type="text" class="form-control"
+                                           th:value="${grade.subject.subjectName + ' (' + grade.subject.subjectCode + ')'}"
+                                           readonly/>
+                                </th:block>
+                                <th:block th:unless="${isEdit}">
+                                    <select th:field="*{subjectId}"
+                                            class="form-select" th:classappend="${#fields.hasErrors('subjectId')} ? 'is-invalid'">
+                                        <option value="">-- Chọn môn học --</option>
+                                        <option th:each="sub : ${subjects}"
+                                                th:value="${sub.id}"
+                                                th:text="${sub.subjectName + ' - ' + sub.credits + ' TC'}">Môn</option>
+                                    </select>
+                                    <div class="invalid-feedback" th:errors="*{subjectId}"></div>
+                                </th:block>
+                            </div>
+
+                            <!-- Học kỳ (disabled khi edit) -->
+                            <div class="mb-4">
+                                <label class="form-label">Học kỳ <span class="text-danger">*</span></label>
+                                <th:block th:if="${isEdit}">
+                                    <input type="hidden" th:field="*{semester}"/>
+                                    <input type="text" class="form-control" th:value="*{semester}" readonly/>
+                                </th:block>
+                                <th:block th:unless="${isEdit}">
+                                    <div class="input-group">
+                                        <select th:field="*{semester}"
+                                                class="form-select" th:classappend="${#fields.hasErrors('semester')} ? 'is-invalid'">
+                                            <option value="">-- Chọn hoặc nhập --</option>
+                                            <option th:each="sem : ${semesters}"
+                                                    th:value="${sem}" th:text="${sem}">HK</option>
+                                        </select>
+                                        <input type="text" id="semesterInput" class="form-control"
+                                               placeholder="VD: 2024-1"
+                                               style="max-width:120px"
+                                               oninput="document.querySelector('[name=semester]').value = this.value"/>
+                                    </div>
+                                    <div class="invalid-feedback" th:errors="*{semester}"></div>
+                                    <small class="text-muted">Format: YYYY-N (VD: 2024-1, 2024-2)</small>
+                                </th:block>
+                            </div>
+
+                            <hr/>
+                            <h6 class="fw-700 mb-3 text-primary">
+                                <i class="bi bi-calculator me-1"></i>Điểm thành phần
+                            </h6>
+
+                            <!-- Điểm thành phần -->
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-4">
+                                    <label class="form-label">
+                                        Chuyên cần
+                                        <span class="text-muted fw-normal">(×10%)</span>
+                                    </label>
+                                    <input type="number" th:field="*{attendanceScore}"
+                                           class="form-control" th:classappend="${#fields.hasErrors('attendanceScore')} ? 'is-invalid'"
+                                           min="0" max="10" step="0.1" placeholder="0.0"/>
+                                    <div class="invalid-feedback" th:errors="*{attendanceScore}"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">
+                                        Giữa kỳ
+                                        <span class="text-muted fw-normal">(×30%)</span>
+                                    </label>
+                                    <input type="number" th:field="*{midtermScore}"
+                                           class="form-control" th:classappend="${#fields.hasErrors('midtermScore')} ? 'is-invalid'"
+                                           min="0" max="10" step="0.1" placeholder="0.0"/>
+                                    <div class="invalid-feedback" th:errors="*{midtermScore}"></div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">
+                                        Cuối kỳ <span class="text-danger">*</span>
+                                        <span class="text-muted fw-normal">(×60%)</span>
+                                    </label>
+                                    <input type="number" th:field="*{finalScore}"
+                                           class="form-control" th:classappend="${#fields.hasErrors('finalScore')} ? 'is-invalid'"
+                                           min="0" max="10" step="0.1" placeholder="0.0"/>
+                                    <div class="invalid-feedback" th:errors="*{finalScore}"></div>
+                                </div>
+                            </div>
+
+                            <!-- Preview tổng kết -->
+                            <div id="scorePreview" class="alert alert-info py-2 px-3 mb-3" style="display:none">
+                                <i class="bi bi-calculator me-2"></i>
+                                Điểm tổng kết dự tính: <strong id="previewValue">--</strong>
+                                <span id="previewGrade" class="ms-2 badge"></span>
+                            </div>
+
+                            <!-- Ghi chú -->
+                            <div class="mb-3">
+                                <label class="form-label">Ghi chú</label>
+                                <input type="text" th:field="*{notes}" class="form-control"
+                                       placeholder="Ghi chú thêm (nếu có)..."/>
+                            </div>
+
+                            <hr class="mt-4"/>
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a th:href="@{/grades}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-lg me-1"></i>Hủy
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg me-1"></i>
+                                    <span th:text="${isEdit} ? 'Cập nhật' : 'Lưu điểm'">Lưu</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Preview điểm tổng kết realtime
+    const cc = document.querySelector('[name=attendanceScore]');
+    const gk = document.querySelector('[name=midtermScore]');
+    const ck = document.querySelector('[name=finalScore]');
+    const preview = document.getElementById('scorePreview');
+    const previewVal = document.getElementById('previewValue');
+    const previewGrade = document.getElementById('previewGrade');
+
+    function calcPreview() {
+        const vCC = parseFloat(cc?.value) || 0;
+        const vGK = parseFloat(gk?.value) || 0;
+        const vCK = parseFloat(ck?.value) || 0;
+        if (vCK > 0) {
+            const total = Math.round((vCC * 0.1 + vGK * 0.3 + vCK * 0.6) * 10) / 10;
+            previewVal.textContent = total.toFixed(1);
+            let letter = total >= 9 ? 'A+' : total >= 8.5 ? 'A' : total >= 8 ? 'B+' :
+                         total >= 7 ? 'B' : total >= 6.5 ? 'C+' : total >= 5.5 ? 'C' :
+                         total >= 5 ? 'D+' : total >= 4 ? 'D' : 'F';
+            previewGrade.textContent = letter;
+            previewGrade.className = 'ms-2 badge ' + (total >= 8 ? 'bg-success' :
+                                     total >= 6.5 ? 'bg-primary' : total >= 5 ? 'bg-warning text-dark' : 'bg-danger');
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+    }
+    [cc, gk, ck].forEach(el => el?.addEventListener('input', calcPreview));
+    calcPreview();
+</script>
+</body>
+</html>

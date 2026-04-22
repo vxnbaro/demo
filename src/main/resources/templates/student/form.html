@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${isEdit} ? 'Sửa Sinh viên' : 'Thêm Sinh viên'">Sinh viên | EduGrade</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+    <th:block th:replace="~{fragments/styles :: styles}"></th:block>
+</head>
+<body>
+<div th:replace="~{fragments/sidebar :: sidebar('students')}"></div>
+
+<div id="main">
+    <div class="topbar">
+        <div class="d-flex align-items-center gap-2">
+            <a th:href="@{/students}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div class="topbar-title"
+                 th:text="${isEdit} ? 'Chỉnh sửa Sinh viên' : 'Thêm Sinh viên mới'">Form</div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card form-card">
+                    <div class="card-header">
+                        <i class="bi bi-person-plus me-2"></i>
+                        <span th:text="${isEdit} ? 'Cập nhật thông tin sinh viên' : 'Nhập thông tin sinh viên mới'">Form</span>
+                    </div>
+                    <div class="card-body p-4">
+                        <form th:action="${isEdit} ? @{/students/{id}/edit(id=${studentId})} : @{/students/new}"
+                              th:object="${studentRequest}" method="post">
+
+                            <div class="row g-3">
+                                <!-- Mã sinh viên -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Mã sinh viên <span class="text-danger">*</span></label>
+                                    <input type="text" th:field="*{studentCode}"
+                                           class="form-control" th:classappend="${#fields.hasErrors('studentCode')} ? 'is-invalid'"
+                                           placeholder="VD: SV2024001" th:readonly="${isEdit}"/>
+                                    <div class="invalid-feedback" th:errors="*{studentCode}"></div>
+                                </div>
+
+                                <!-- Họ và tên -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                                    <input type="text" th:field="*{fullName}"
+                                           class="form-control" th:classappend="${#fields.hasErrors('fullName')} ? 'is-invalid'"
+                                           placeholder="VD: Nguyễn Văn An"/>
+                                    <div class="invalid-feedback" th:errors="*{fullName}"></div>
+                                </div>
+
+                                <!-- Email -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Email <span class="text-danger">*</span></label>
+                                    <input type="email" th:field="*{email}"
+                                           class="form-control" th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
+                                           placeholder="VD: sv@student.edu.vn"/>
+                                    <div class="invalid-feedback" th:errors="*{email}"></div>
+                                </div>
+
+                                <!-- SĐT -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Số điện thoại</label>
+                                    <input type="text" th:field="*{phoneNumber}"
+                                           class="form-control" th:classappend="${#fields.hasErrors('phoneNumber')} ? 'is-invalid'"
+                                           placeholder="VD: 0901234567"/>
+                                    <div class="invalid-feedback" th:errors="*{phoneNumber}"></div>
+                                </div>
+
+                                <!-- Ngày sinh -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Ngày sinh</label>
+                                    <input type="date" th:field="*{dateOfBirth}" class="form-control"/>
+                                </div>
+
+                                <!-- Giới tính -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Giới tính</label>
+                                    <select th:field="*{gender}" class="form-select">
+                                        <option value="">-- Chọn --</option>
+                                        <option value="Nam">Nam</option>
+                                        <option value="Nữ">Nữ</option>
+                                        <option value="Khác">Khác</option>
+                                    </select>
+                                </div>
+
+                                <!-- Lớp -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Lớp học</label>
+                                    <select th:field="*{classId}" class="form-select">
+                                        <option value="">-- Chọn lớp --</option>
+                                        <option th:each="cls : ${classes}"
+                                                th:value="${cls.id}"
+                                                th:text="${cls.className}">Lớp</option>
+                                    </select>
+                                </div>
+
+                                <!-- Địa chỉ -->
+                                <div class="col-12">
+                                    <label class="form-label">Địa chỉ</label>
+                                    <input type="text" th:field="*{address}" class="form-control"
+                                           placeholder="Địa chỉ thường trú..."/>
+                                </div>
+                            </div>
+
+                            <hr class="my-4"/>
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a th:href="@{/students}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-x-lg me-1"></i>Hủy
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-check-lg me-1"></i>
+                                    <span th:text="${isEdit} ? 'Cập nhật' : 'Thêm mới'">Lưu</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
